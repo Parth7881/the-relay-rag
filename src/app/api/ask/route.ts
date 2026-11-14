@@ -88,6 +88,14 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const retryAfter = response.headers.get("retry-after");
       const failure = providerError(response.status);
+      if (failure.refused) {
+        return NextResponse.json({
+          answer: failure.message,
+          refused: true,
+          citations: [],
+          model
+        });
+      }
       return NextResponse.json(
         { error: failure.message },
         { status: failure.status, headers: retryAfter ? { "Retry-After": retryAfter } : undefined }
