@@ -51,7 +51,6 @@ export function RelayApp() {
   const [notice, setNotice] = useState<string | null>(null);
   const [accessCode, setAccessCode] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
-  const fileInput = useRef<HTMLInputElement>(null);
   const bottom = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -244,10 +243,22 @@ export function RelayApp() {
         <h2>Your research library</h2>
         <p className="panel-copy">Choose the documents The Relay can use for its next answer.</p>
 
-        <button className="upload-button" onClick={() => fileInput.current?.click()} disabled={uploading}>
+        <label className={`upload-button ${uploading ? "disabled" : ""}`} htmlFor="relay-pdf-input" aria-disabled={uploading}>
           {uploading ? <LoaderCircle className="spin" /> : <Plus />}<span>{uploading ? "Indexing…" : "Add PDFs"}</span>
-        </button>
-        <input ref={fileInput} type="file" accept="application/pdf,.pdf" multiple hidden onChange={(event) => event.target.files && void ingest(event.target.files)} />
+        </label>
+        <input
+          id="relay-pdf-input"
+          className="native-file-input"
+          type="file"
+          accept="application/pdf,.pdf"
+          multiple
+          disabled={uploading}
+          onChange={(event) => {
+            const files = event.currentTarget.files;
+            if (files?.length) void ingest(files);
+            event.currentTarget.value = "";
+          }}
+        />
 
         <div className="source-heading"><span>Sources</span><span>{selected.size}/{readyDocuments.length} selected</span></div>
         <div className="source-list">
@@ -314,7 +325,7 @@ export function RelayApp() {
 
         {view === "library" && (
           <section className="page-view">
-            <div className="page-title"><div><div className="eyebrow">Private by default</div><h1>Document library</h1><p>Indexed locally in this browser. Nothing is uploaded to a document server.</p></div><button className="primary-action" onClick={() => fileInput.current?.click()}><Upload />Upload PDFs</button></div>
+            <div className="page-title"><div><div className="eyebrow">Private by default</div><h1>Document library</h1><p>Indexed locally in this browser. Nothing is uploaded to a document server.</p></div><label className="primary-action" htmlFor="relay-pdf-input"><Upload />Upload PDFs</label></div>
             <div className={`drop-zone ${dragging ? "dragging" : ""}`} onDragOver={(event) => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={(event) => { event.preventDefault(); setDragging(false); void ingest(event.dataTransfer.files); }}>
               <Upload /><strong>Drop PDFs here</strong><span>Text-based PDF · up to 25 MB · max 8 at a time</span>
             </div>
