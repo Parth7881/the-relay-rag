@@ -71,7 +71,9 @@ export function RelayApp() {
     localStorage.setItem("relay-theme", theme);
   }, [theme]);
 
-  useEffect(() => bottom.current?.scrollIntoView({ behavior: "smooth" }), [messages, busy]);
+  useEffect(() => {
+    bottom.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, busy]);
 
   const readyDocuments = useMemo(() => documents.filter((document) => document.status === "ready"), [documents]);
 
