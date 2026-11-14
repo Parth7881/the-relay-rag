@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { chunkPages } from "@/lib/chunking";
 import { toEvidence } from "@/lib/evidence";
+import { promptExamples } from "@/lib/prompt-examples";
 import { inspectPdfFile } from "@/lib/pdf-policy";
 import { parsePdf } from "@/lib/pdf";
 import { retrieve } from "@/lib/retrieval";
@@ -282,8 +283,8 @@ export function RelayApp() {
                   <h1>Ask your documents.<br />See the evidence.</h1>
                   <p>Upload text-based PDFs, select your sources, then ask a specific question. Unsupported claims are refused instead of guessed.</p>
                   <div className="prompt-examples">
-                    {["Summarize the main contribution", "Compare the methods across these papers", "What limitations do the authors report?"].map((prompt) => (
-                      <button key={prompt} onClick={() => setQuestion(prompt)}>{prompt}<ArrowUp /></button>
+                    {promptExamples(selected.size).map((prompt) => (
+                      <button key={prompt} onClick={() => { setNotice(null); setQuestion(prompt); }}>{prompt}<ArrowUp /></button>
                     ))}
                   </div>
                 </div>
