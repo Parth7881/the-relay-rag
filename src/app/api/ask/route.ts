@@ -3,6 +3,7 @@ import { askRequestSchema, buildGroundedMessages } from "@/lib/ask-contract";
 import { validateGroundedClaims, type GroundedClaim } from "@/lib/citations";
 import { consumeWindow, type WindowState } from "@/lib/rate-limit";
 import { providerError } from "@/lib/provider-error";
+import { buildProviderRequest } from "@/lib/provider-request";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -77,13 +78,10 @@ export async function POST(request: NextRequest) {
         Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
+      body: JSON.stringify(buildProviderRequest(
         model,
-        messages: buildGroundedMessages(parsed.data.question, parsed.data.evidence),
-        temperature: 0.1,
-        max_completion_tokens: 700,
-        response_format: { type: "json_object" }
-      }),
+        buildGroundedMessages(parsed.data.question, parsed.data.evidence)
+      )),
       signal: controller.signal
     });
 
