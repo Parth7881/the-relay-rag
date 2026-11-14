@@ -75,10 +75,9 @@ Set these values in `.env.local`:
 ```dotenv
 GROQ_API_KEY=your_key
 GROQ_MODEL=llama-3.3-70b-versatile
-RELAY_ACCESS_CODE=a_long_random_shared_secret
 ```
 
-Open `http://localhost:3000`, enter the access code in the workspace panel, add a text-based PDF, select it, and ask a specific question.
+Open `http://localhost:3000`, add a text-based PDF, select it, and ask a specific question.
 
 ## Commands
 
@@ -92,9 +91,8 @@ npm start      # serve the production build
 ## Deploy to Vercel
 
 1. Import this repository into Vercel.
-2. Add `GROQ_API_KEY`, `GROQ_MODEL`, and `RELAY_ACCESS_CODE` as Production environment variables.
+2. Add `GROQ_API_KEY` and `GROQ_MODEL` as Production environment variables.
 3. Deploy. Vercel detects Next.js automatically.
-4. Give the access code only to intended users; it protects the shared Groq quota.
 
 Do not prefix secrets with `NEXT_PUBLIC_`. Client-visible environment variables are bundled into the browser.
 
@@ -103,11 +101,10 @@ Do not prefix secrets with `NEXT_PUBLIC_`. Client-visible environment variables 
 - PDF bytes, extracted pages, and the complete index stay in IndexedDB.
 - Only the question and up to ten retrieved passages are posted to `/api/ask`.
 - The API key remains server-side.
-- Production answering is disabled unless both `GROQ_API_KEY` and `RELAY_ACCESS_CODE` exist.
-- The access code is stored only in `sessionStorage`, so it disappears when the tab session ends.
+- Production answering is disabled unless `GROQ_API_KEY` exists.
 - Model input treats retrieved text as untrusted reference material, not instructions.
 - The API byte-limits request bodies before JSON parsing, validates request shape, and checks each generated claim against exact source text.
-- Failed and successful requests have separate bounded in-memory windows. These remain lightweight controls, not globally consistent distributed quotas.
+- Requests have a bounded per-client in-memory rate window. This remains a lightweight control, not a globally consistent distributed quota.
 
 See [SECURITY.md](SECURITY.md) for reporting and deployment guidance.
 

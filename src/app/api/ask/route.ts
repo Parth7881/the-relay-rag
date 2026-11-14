@@ -1,24 +1,14 @@
-import { timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { askRequestSchema, buildGroundedMessages } from "@/lib/ask-contract";
 import { validateGroundedClaims, type GroundedClaim } from "@/lib/citations";
 import { consumeWindow, type WindowState } from "@/lib/rate-limit";
+import { providerError } from "@/lib/provider-error";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
-const attemptWindows = new Map<string, WindowState>();
 const answerWindows = new Map<string, WindowState>();
 const MAX_BODY_BYTES = 64 * 1024;
-
-function authorized(request: NextRequest): boolean {
-  const expected = process.env.RELAY_ACCESS_CODE;
-  if (!expected) return process.env.NODE_ENV !== "production";
-  const supplied = request.headers.get("x-relay-access-code") ?? "";
-  const a = Buffer.from(expected);
-  const b = Buffer.from(supplied);
-  return a.length === b.length && timingSafeEqual(a, b);
-}
 
 function clientKey(request: NextRequest): string {
   return request.headers.get("x-real-ip")?.trim()
@@ -57,16 +47,10 @@ async function readBoundedJson(request: NextRequest): Promise<unknown> {
 }
 
 export async function POST(request: NextRequest) {
-  if (!process.env.GROQ_API_KEY || !process.env.RELAY_ACCESS_CODE || process.env.RELAY_ACCESS_CODE.length < 32) {
+  if (!process.env.GROQ_API_KEY) {
     return NextResponse.json({ error: "This deployment is not configured yet." }, { status: 503 });
   }
   const key = clientKey(request);
-  if (!consumeWindow(attemptWindows, key, 30)) {
-    return NextResponse.json({ error: "Too many access attempts. Please wait one minute." }, { status: 429 });
-  }
-  if (!authorized(request)) {
-    return NextResponse.json({ error: "The access code is incorrect." }, { status: 401 });
-  }
   if (!consumeWindow(answerWindows, key, 10)) {
     return NextResponse.json({ error: "Too many questions. Please wait one minute." }, { status: 429 });
   }
@@ -105,9 +89,10 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const retryAfter = response.headers.get("retry-after");
+      const failure = providerError(response.status);
       return NextResponse.json(
-        { error: response.status === 429 ? "The model is rate-limited. Try again shortly." : "The model provider could not answer." },
-        { status: response.status === 429 ? 429 : 502, headers: retryAfter ? { "Retry-After": retryAfter } : undefined }
+        { error: failure.message },
+        { status: failure.status, headers: retryAfter ? { "Retry-After": retryAfter } : undefined }
       );
     }
 

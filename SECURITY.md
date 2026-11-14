@@ -12,11 +12,9 @@ Include the affected route or component, reproduction steps, impact, and a minim
 
 ## Deployment checklist
 
-- Keep `GROQ_API_KEY` and `RELAY_ACCESS_CODE` server-only.
-- Use a long, unique access code and rotate it when access changes.
-- Use at least 32 characters; shorter production codes are rejected by the server.
+- Keep `GROQ_API_KEY` server-only.
 - Restrict preview deployments or give them separate low-quota credentials.
-- Review Vercel logs for repeated `401` and `429` responses.
+- Review Vercel logs for repeated `429` and provider-error responses.
 - Add durable rate limiting and authentication before operating a high-traffic public service.
 - Run `npm audit --omit=dev`, `npm test`, `npm run lint`, and `npm run build` before release.
 

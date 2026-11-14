@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowUp, BookOpen, Check, ChevronRight, CircleAlert, Database, FileText,
-  Files, Info, Library, LoaderCircle, LockKeyhole, Menu, MessageCircle,
+  Files, Info, Library, LoaderCircle, Menu, MessageCircle,
   Moon, Plus, Search, ShieldCheck, Sun, Trash2, Upload, X, Zap
 } from "lucide-react";
 import { chunkPages } from "@/lib/chunking";
@@ -49,7 +49,6 @@ export function RelayApp() {
   const [uploading, setUploading] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-  const [accessCode, setAccessCode] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
   const bottom = useRef<HTMLDivElement>(null);
 
@@ -57,7 +56,6 @@ export function RelayApp() {
     const timer = window.setTimeout(() => {
       const savedTheme = localStorage.getItem("relay-theme") as Theme | null;
       if (savedTheme && themes.some((item) => item.id === savedTheme)) setTheme(savedTheme);
-      setAccessCode(sessionStorage.getItem("relay-access-code") ?? "");
     }, 0);
     void listDocuments().then((stored) => {
       setDocuments(stored);
@@ -175,15 +173,9 @@ export function RelayApp() {
         addActivity("Question refused", "No relevant local evidence was found.");
         return;
       }
-      if (!accessCode) {
-        setQuestion(cleanQuestion);
-        setNotice("Enter the deployment access code in the workspace panel first.");
-        return;
-      }
-      sessionStorage.setItem("relay-access-code", accessCode);
       const response = await fetch("/api/ask", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-Relay-Access-Code": accessCode },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: cleanQuestion, evidence })
       });
       const body = await response.json() as AskResponse & { error?: string };
@@ -272,11 +264,6 @@ export function RelayApp() {
           ))}
         </div>
 
-        <div className="access-card">
-          <div><LockKeyhole /><strong>Protected answers</strong></div>
-          <p>The code stays in this browser tab and protects the shared model quota.</p>
-          <input value={accessCode} onChange={(event) => setAccessCode(event.target.value)} type="password" autoComplete="off" placeholder="Deployment access code" aria-label="Deployment access code" />
-        </div>
         <div className="privacy-note"><Info /><span>PDFs stay in this browser. Only retrieved text passages are sent for answering.</span></div>
       </aside>
 
